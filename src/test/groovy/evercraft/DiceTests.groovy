@@ -1,0 +1,4 @@
+package evercraft
+
+class DiceTests {
+}

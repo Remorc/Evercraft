@@ -15,4 +15,14 @@ class Character {
         Neutral,
         Evil
     }
+
+    def takeDamage(int damage) {
+
+    }
+
+    def attack(Character defender) {
+        if (Dice.roll() >= defender.armorClass) {
+            defender.takeDamage(1)
+        }
+    }
 }
