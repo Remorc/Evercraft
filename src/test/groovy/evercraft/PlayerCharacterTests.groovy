@@ -4,6 +4,7 @@ import spock.lang.Specification
 import spock.lang.Unroll
 
 import static evercraft.Character.Alignment.*
+import static evercraft.Dice.DieType.d20
 
 class PlayerCharacterTests extends Specification {
 
@@ -52,7 +53,7 @@ class PlayerCharacterTests extends Specification {
         given:
         def defender = Mock Character
         defender.armorClass >> ac
-        Dice.roll() >> roll
+        Dice.roll(d20) >> roll
 
         when:
         character.attack defender

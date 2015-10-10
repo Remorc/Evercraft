@@ -1,5 +1,7 @@
 package evercraft
 
+import static evercraft.Dice.DieType.d20
+
 class Character {
 
     String name
@@ -21,7 +23,7 @@ class Character {
     }
 
     def attack(Character defender) {
-        if (Dice.roll() >= defender.armorClass) {
+        if (Dice.roll(d20) >= defender.armorClass) {
             defender.takeDamage(1)
         }
     }
