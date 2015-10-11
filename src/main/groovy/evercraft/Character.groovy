@@ -32,11 +32,15 @@ class Character {
     }
 
     def attack(Character defender) {
-        defender.takeDamage determineDamage(defender.armorClass, Dice.roll(d20))
+        defender.takeDamage determineDamage(defender.armorClass)
     }
 
     def isAlive() {
         hitPoints > 0
+    }
+
+    def int getLevel() {
+        1 + (experience / 1000)
     }
 
     def setConstitution(AbilityScore abilityScore) {
@@ -49,16 +53,13 @@ class Character {
         armorClass = 10 + abilityScore.modifier
     }
 
-    def int getLevel() {
-        1 + (experience / 1000)
-    }
-
-    private def determineDamage(armorClass, roll) {
+    private def determineDamage(int armorClass) {
+        int roll = Dice.roll(d20)
         int damage = 0
 
         if (roll >= armorClass) {
+            damage = max((int)(1 + (getLevel() / 2)) + strength.modifier, 1)
             experience += 10
-            damage = max(1 + strength.modifier, 1)
         }
 
         if (roll == 20) {

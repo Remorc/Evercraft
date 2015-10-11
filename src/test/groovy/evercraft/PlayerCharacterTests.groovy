@@ -3,20 +3,7 @@ package evercraft
 import spock.lang.Specification
 import spock.lang.Unroll
 
-import static evercraft.AbilityScore.ELEVEN
-import static evercraft.AbilityScore.FOUR
-import static evercraft.AbilityScore.NINTEEN
-import static evercraft.AbilityScore.ONE
-import static evercraft.AbilityScore.SEVEN
-import static evercraft.AbilityScore.SEVENTEEN
-import static evercraft.AbilityScore.SIX
-import static evercraft.AbilityScore.SIXTEEN
-import static evercraft.AbilityScore.TEN
-import static evercraft.AbilityScore.THIRTEEN
-import static evercraft.AbilityScore.THREE
-import static evercraft.AbilityScore.TWELVE
-import static evercraft.AbilityScore.TWENTY
-import static evercraft.AbilityScore.TWO
+import static evercraft.AbilityScore.*
 import static evercraft.Character.Alignment.*
 import static evercraft.Dice.DieType.d20
 
@@ -144,9 +131,11 @@ class PlayerCharacterTests extends Specification {
     }
 
     @Unroll
-    def 'should deal #damage damage to defender with AC of #ac when dice roll is #roll with a strength of #str'() {
+    def 'of level #level should deal #damage damage to defender with AC of #ac when dice roll is #roll with a strength of #str'() {
         given:
         character.strength = str
+        character.experience = (level - 1) * 1000
+
         def defender = Mock Character
         defender.armorClass >> ac
         Dice.roll(d20) >> roll
@@ -158,15 +147,20 @@ class PlayerCharacterTests extends Specification {
         1 * defender.takeDamage(damage)
 
         where:
-        ac | roll | str     | damage
-        10 | 2    | TEN     | 0
-        12 | 11   | TEN     | 0
-        24 | 20   | TEN     | 0
-        10 | 10   | ONE     | 1
-        10 | 15   | SEVEN   | 1
-        10 | 10   | TEN     | 1 + TEN.modifier
-        10 | 19   | TEN     | 1 + TEN.modifier
-        14 | 20   | TEN     | 2 * (1 + TEN.modifier)
-        10 | 20   | SIXTEEN | 2 * (1 + SIXTEEN.modifier)
+        ac | level | roll | str     | damage
+        10 | 1     | 2    | TEN     | 0
+        12 | 1     | 11   | TEN     | 0
+        24 | 1     | 20   | TEN     | 0
+        10 | 1     | 10   | ONE     | 1
+        10 | 1     | 15   | SEVEN   | 1
+        10 | 1     | 10   | TEN     | 1 + TEN.modifier
+        10 | 1     | 19   | TEN     | 1 + TEN.modifier
+        14 | 1     | 20   | TEN     | 2 * (1 + TEN.modifier)
+        10 | 1     | 20   | SIXTEEN | 2 * (1 + SIXTEEN.modifier)
+        10 | 2     | 15   | SIXTEEN | 2 + SIXTEEN.modifier
+        10 | 3     | 15   | SIXTEEN | 2 + SIXTEEN.modifier
+        10 | 4     | 15   | SIXTEEN | 3 + SIXTEEN.modifier
+        10 | 4     | 20   | TWENTY  | 2 * (3 + TWENTY.modifier)
+        10 | 6     | 15   | NINTEEN | 4 + NINTEEN.modifier
     }
 }
