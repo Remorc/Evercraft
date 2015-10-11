@@ -89,6 +89,22 @@ class PlayerCharacterTests extends Specification {
     }
 
     @Unroll
+    def 'should be level #level with #xp experience points'() {
+        given:
+        character.experience = xp
+
+        expect:
+        level == character.level
+
+        where:
+        level | xp
+        1     | 0
+        1     | 999
+        2     | 1000
+        3     | 2000
+    }
+
+    @Unroll
     def 'should set hp to #hp with a consitution of #con'() {
         given:
         character.constitution = con

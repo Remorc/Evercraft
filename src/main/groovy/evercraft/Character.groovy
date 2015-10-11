@@ -7,14 +7,12 @@ import static java.lang.Math.max
 class Character {
 
     String name
+    Alignment alignment
 
     int hitPoints = 5
-
     int armorClass = 10
-
     int experience = 0
-
-    Alignment alignment
+    int level
 
     AbilityScore strength = TEN
     AbilityScore dexterity = TEN
@@ -29,16 +27,6 @@ class Character {
         Evil
     }
 
-    def setConstitution(AbilityScore abilityScore) {
-        constitution = abilityScore
-        hitPoints = max(5 + abilityScore.modifier, 1)
-    }
-
-    def setDexterity(AbilityScore abilityScore) {
-        dexterity = abilityScore
-        armorClass = 10 + abilityScore.modifier
-    }
-
     def takeDamage(int damage) {
         hitPoints -= damage
     }
@@ -49,6 +37,20 @@ class Character {
 
     def isAlive() {
         hitPoints > 0
+    }
+
+    def setConstitution(AbilityScore abilityScore) {
+        constitution = abilityScore
+        hitPoints = max(5 + abilityScore.modifier, 1)
+    }
+
+    def setDexterity(AbilityScore abilityScore) {
+        dexterity = abilityScore
+        armorClass = 10 + abilityScore.modifier
+    }
+
+    def int getLevel() {
+        1 + (experience / 1000)
     }
 
     private def determineDamage(armorClass, roll) {
