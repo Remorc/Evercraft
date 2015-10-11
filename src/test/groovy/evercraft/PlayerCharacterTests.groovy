@@ -71,6 +71,23 @@ class PlayerCharacterTests extends Specification {
         TEN == character.charisma
     }
 
+    def 'should start with no experience'() {
+        expect:
+        0 == character.experience
+    }
+
+    def 'should increase experience on a successful hit'() {
+        given:
+        def defender = Mock Character
+        Dice.roll(d20) >> 19
+
+        when:
+        character.attack defender
+
+        then:
+        10 == character.experience
+    }
+
     @Unroll
     def 'should set hp to #hp with a consitution of #con'() {
         given:

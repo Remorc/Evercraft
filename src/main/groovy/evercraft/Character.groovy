@@ -12,6 +12,8 @@ class Character {
 
     int armorClass = 10
 
+    int experience = 0
+
     Alignment alignment
 
     AbilityScore strength = TEN
@@ -53,6 +55,7 @@ class Character {
         int damage = 0
 
         if (roll >= armorClass) {
+            experience += 10
             damage = max(1 + strength.modifier, 1)
         }
 
