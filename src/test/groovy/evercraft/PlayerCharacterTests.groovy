@@ -3,6 +3,9 @@ package evercraft
 import spock.lang.Specification
 import spock.lang.Unroll
 
+import static evercraft.AbilityScore.ELEVEN
+import static evercraft.AbilityScore.FOUR
+import static evercraft.AbilityScore.NINTEEN
 import static evercraft.AbilityScore.ONE
 import static evercraft.AbilityScore.SEVEN
 import static evercraft.AbilityScore.SEVENTEEN
@@ -13,6 +16,7 @@ import static evercraft.AbilityScore.THIRTEEN
 import static evercraft.AbilityScore.THREE
 import static evercraft.AbilityScore.TWELVE
 import static evercraft.AbilityScore.TWENTY
+import static evercraft.AbilityScore.TWO
 import static evercraft.Character.Alignment.*
 import static evercraft.Dice.DieType.d20
 
@@ -47,20 +51,6 @@ class PlayerCharacterTests extends Specification {
         9 == character.hitPoints
     }
 
-    def 'should be considered #status when HP is #hp'() {
-        given:
-        character.hitPoints = hp
-
-        expect:
-        (status == 'alive') == character.isAlive()
-
-        where:
-        status  | hp
-        'alive' | 1
-        'dead'  | 0
-        'dead'  | -1
-    }
-
     def 'should default all attributes to TEN'() {
         expect:
         TEN == character.strength
@@ -89,35 +79,41 @@ class PlayerCharacterTests extends Specification {
     }
 
     @Unroll
-    def 'should be level #level with #xp experience points'() {
+    def 'should be considered #status when HP is #hp'() {
         given:
-        character.experience = xp
+        character.hitPoints = hp
 
         expect:
-        level == character.level
+        (status == 'alive') == character.isAlive()
 
         where:
-        level | xp
-        1     | 0
-        1     | 999
-        2     | 1000
-        3     | 2000
+        status  | hp
+        'alive' | 1
+        'dead'  | 0
+        'dead'  | -1
     }
 
     @Unroll
-    def 'should set hp to #hp with a consitution of #con'() {
+    def 'should be level #level with #xp experience points and have hp of #hp with a constitution of #con'() {
         given:
+        character.experience = xp
         character.constitution = con
 
+
         expect:
+        level == character.level
         hp == character.hitPoints
 
         where:
-        con    | hp
-        ONE    | 1
-        THREE  | 5 + THREE.modifier
-        TEN    | 5 + TEN.modifier
-        TWENTY | 5 + TWENTY.modifier
+        level | xp   | con     | hp
+        1     | 0    | ONE     | 1
+        1     | 0    | THREE   | 5 + THREE.modifier
+        1     | 0    | TEN     | 5 + TEN.modifier
+        1     | 0    | TWENTY  | 5 + TWENTY.modifier
+        1     | 999  | FOUR    | 5 + FOUR.modifier
+        2     | 1000 | NINTEEN | 2 * (5 + NINTEEN.modifier)
+        3     | 2000 | ELEVEN  | 3 * (5 + ELEVEN.modifier)
+        4     | 3912 | ONE     | 4 * 1
     }
 
     @Unroll

@@ -41,7 +41,7 @@ class Character {
 
     def setConstitution(AbilityScore abilityScore) {
         constitution = abilityScore
-        hitPoints = max(5 + abilityScore.modifier, 1)
+        hitPoints = getLevel() * max(5 + abilityScore.modifier, 1)
     }
 
     def setDexterity(AbilityScore abilityScore) {
