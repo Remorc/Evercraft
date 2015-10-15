@@ -5,7 +5,7 @@ import spock.lang.Unroll
 
 import static evercraft.AbilityScore.*
 import static evercraft.Character.Alignment.*
-import static evercraft.Dice.DieType.d20
+import static evercraft.Dice.d20
 
 class PlayerCharacterTests extends Specification {
 
@@ -13,7 +13,8 @@ class PlayerCharacterTests extends Specification {
 
     def setup() {
         character = new Character()
-        GroovySpy(Dice, global: true)
+        GroovySpy(Random, global: true)
+//        GroovySpy(Dice, global: true)
     }
 
     def 'should be able to set character name'() {
@@ -56,13 +57,26 @@ class PlayerCharacterTests extends Specification {
     def 'should increase experience on a successful hit'() {
         given:
         def defender = Mock Character
-        Dice.roll(d20) >> 19
+        Random.nextInt(d20.value) >> 19
 
         when:
         character.attack defender
 
         then:
         10 == character.experience
+    }
+
+    def 'should increase HP when leveling up from combat'() {
+        given:
+        def defender = Mock Character
+        Random.nextInt(d20.value) >> 19
+        character.experience = 990
+
+        when:
+        character.attack defender
+
+        then:
+        10 == character.hitPoints
     }
 
     @Unroll
@@ -81,7 +95,7 @@ class PlayerCharacterTests extends Specification {
     }
 
     @Unroll
-    def 'should be level #level with #xp experience points and have hp of #hp with a constitution of #con'() {
+    def 'should be level #level when starting with #xp experience points and have hp of #hp with a constitution of #con'() {
         given:
         character.experience = xp
         character.constitution = con
@@ -133,18 +147,19 @@ class PlayerCharacterTests extends Specification {
     @Unroll
     def 'of level #level should deal #damage damage to defender with AC of #ac when dice roll is #roll with a strength of #str'() {
         given:
-        character.strength = str
         character.experience = (level - 1) * 1000
+        character.strength = str
 
         def defender = Mock Character
         defender.armorClass >> ac
-        Dice.roll(d20) >> roll
+        Random.nextInt(d20.value) >> roll - 1
 
         when:
         character.attack defender
 
         then:
         1 * defender.takeDamage(damage)
+        sleep(100)
 
         where:
         ac | level | roll | str     | damage

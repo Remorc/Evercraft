@@ -1,7 +1,7 @@
 package evercraft
 
 import static evercraft.AbilityScore.TEN
-import static evercraft.Dice.DieType.d20
+import static evercraft.Dice.d20
 import static java.lang.Math.max
 
 class Character {
@@ -12,7 +12,7 @@ class Character {
     int hitPoints = 5
     int armorClass = 10
     int experience = 0
-    int level
+    int damage = 1
 
     AbilityScore strength = TEN
     AbilityScore dexterity = TEN
@@ -40,25 +40,31 @@ class Character {
     }
 
     def int getLevel() {
-        1 + (experience / 1000)
+        calculateLevel(experience)
+    }
+
+    def setStrength(AbilityScore abilityScore) {
+        strength = abilityScore
+        adjustDamage()
     }
 
     def setConstitution(AbilityScore abilityScore) {
         constitution = abilityScore
-        hitPoints = getLevel() * max(5 + abilityScore.modifier, 1)
+        adjustHitPoints calculateLevel(experience)
     }
 
     def setDexterity(AbilityScore abilityScore) {
         dexterity = abilityScore
-        armorClass = 10 + abilityScore.modifier
+        adjustArmorClass()
     }
 
     private def determineDamage(int armorClass) {
-        int roll = Dice.roll(d20)
+        int roll = d20.roll()
         int damage = 0
 
         if (roll >= armorClass) {
-            damage = max((int)(1 + (getLevel() / 2)) + strength.modifier, 1)
+            damage = this.damage
+            levelUp(experience, 10)
             experience += 10
         }
 
@@ -68,4 +74,31 @@ class Character {
 
         damage
     }
+
+    private def levelUp(experience, gain) {
+        def levelAfterExperienceGain = calculateLevel(experience + gain)
+
+        if (levelAfterExperienceGain > getLevel()) {
+            adjustHitPoints(levelAfterExperienceGain)
+        }
+    }
+
+    private def adjustDamage() {
+        damage = max((int)(1 + (getLevel() / 2)) + strength.modifier, 1)
+    }
+
+    private def adjustArmorClass() {
+        armorClass = 10 + dexterity.modifier
+    }
+
+    private def adjustHitPoints(level) {
+        hitPoints = level * max(5 + constitution.modifier, 1)
+    }
+
+    private def int calculateLevel(experience) {
+        1 + (experience / 1000)
+    }
+
+    private setDamage(damage) { }
+    private getDamage() { }
 }
