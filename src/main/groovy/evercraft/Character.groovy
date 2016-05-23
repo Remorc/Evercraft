@@ -9,7 +9,8 @@ class Character {
     String name
     Alignment alignment
 
-    int hitPoints = 5
+    int remainingHitPoints = 5
+    int maxHitPoints = 5
     int armorClass = 10
     int experience = 0
     int damage = 1
@@ -27,16 +28,44 @@ class Character {
         Evil
     }
 
-    def takeDamage(int damage) {
-        hitPoints -= damage
+    def isAlive() {
+        remainingHitPoints > 0
+    }
+
+    boolean damage(int roll, int damage) {
+        def takeDamage = roll >= armorClass
+        remainingHitPoints -= takeDamage ? damage : 0
+        takeDamage
     }
 
     def attack(Character defender) {
-        defender.takeDamage determineDamage(defender.armorClass)
+        def roll = d20.roll()
+
+        if (defender.damage(roll, calculateDamage(roll))) {
+            levelUp(experience, 10)
+            experience += 10
+        }
     }
 
-    def isAlive() {
-        hitPoints > 0
+    private int calculateDamage(int roll) {
+        roll == 20 ? damage * 2 : damage
+    }
+
+    private def levelUp(experience, gain) {
+        def levelAfterExperienceGain = calculateLevel(experience + gain)
+
+        if (levelAfterExperienceGain > getLevel()) {
+            adjustHitPoints(levelAfterExperienceGain)
+        }
+    }
+
+    private def adjustHitPoints(level) {
+        maxHitPoints = level * max(5 + constitution.modifier, 1)
+        remainingHitPoints = maxHitPoints
+    }
+
+    private def int calculateLevel(experience) {
+        1 + (experience / 1000)
     }
 
     def int getLevel() {
@@ -58,45 +87,12 @@ class Character {
         adjustArmorClass()
     }
 
-    private def determineDamage(int armorClass) {
-        int roll = d20.roll()
-        int damage = 0
-
-        if (roll >= armorClass) {
-            damage = this.damage
-            levelUp(experience, 10)
-            experience += 10
-        }
-
-        if (roll == 20) {
-            damage *= 2
-        }
-
-        damage
-    }
-
-    private def levelUp(experience, gain) {
-        def levelAfterExperienceGain = calculateLevel(experience + gain)
-
-        if (levelAfterExperienceGain > getLevel()) {
-            adjustHitPoints(levelAfterExperienceGain)
-        }
-    }
-
     private def adjustDamage() {
         damage = max((int)(1 + (getLevel() / 2)) + strength.modifier, 1)
     }
 
     private def adjustArmorClass() {
         armorClass = 10 + dexterity.modifier
-    }
-
-    private def adjustHitPoints(level) {
-        hitPoints = level * max(5 + constitution.modifier, 1)
-    }
-
-    private def int calculateLevel(experience) {
-        1 + (experience / 1000)
     }
 
     private setDamage(damage) { }

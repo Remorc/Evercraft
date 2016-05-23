@@ -14,7 +14,6 @@ class PlayerCharacterTests extends Specification {
     def setup() {
         character = new Character()
         GroovySpy(Random, global: true)
-//        GroovySpy(Dice, global: true)
     }
 
     def 'should be able to set character name'() {
@@ -28,15 +27,47 @@ class PlayerCharacterTests extends Specification {
         expectedName == character.name
     }
 
-    def 'should be able to take damage'() {
+    def 'should not take damage if the roll is less than armor class'() {
         given:
-        character.hitPoints = 10
+        character.remainingHitPoints = 10
+        character.armorClass = 10
 
         when:
-        character.takeDamage 1
+        def result = character.damage(5, 7)
 
         then:
-        9 == character.hitPoints
+        10 == character.remainingHitPoints
+        false == result
+    }
+
+    def 'should take damage if the roll is greater than armor class and not affect max HP'() {
+        given:
+        character.remainingHitPoints = 10
+        character.maxHitPoints = 10
+        character.armorClass = 10
+
+        when:
+        def result = character.damage(15, 7)
+
+        then:
+        3 == character.remainingHitPoints
+        10 == character.maxHitPoints
+        true == result
+    }
+
+    def 'should take damage if the roll is equal to armor class and not affect max HP'() {
+        given:
+        character.remainingHitPoints = 10
+        character.maxHitPoints = 10
+        character.armorClass = 10
+
+        when:
+        def result = character.damage(10, 7)
+
+        then:
+        3 == character.remainingHitPoints
+        10 == character.maxHitPoints
+        true == result
     }
 
     def 'should default all attributes to TEN'() {
@@ -57,7 +88,8 @@ class PlayerCharacterTests extends Specification {
     def 'should increase experience on a successful hit'() {
         given:
         def defender = Mock Character
-        Random.nextInt(d20.value) >> 19
+        Random.nextInt(d20.value) >> 17
+        defender.damage(18, 1) >> true
 
         when:
         character.attack defender
@@ -66,23 +98,10 @@ class PlayerCharacterTests extends Specification {
         10 == character.experience
     }
 
-    def 'should increase HP when leveling up from combat'() {
-        given:
-        def defender = Mock Character
-        Random.nextInt(d20.value) >> 19
-        character.experience = 990
-
-        when:
-        character.attack defender
-
-        then:
-        10 == character.hitPoints
-    }
-
     @Unroll
     def 'should be considered #status when HP is #hp'() {
         given:
-        character.hitPoints = hp
+        character.remainingHitPoints = hp
 
         expect:
         (status == 'alive') == character.isAlive()
@@ -95,6 +114,64 @@ class PlayerCharacterTests extends Specification {
     }
 
     @Unroll
+    def 'should be able to set character alignment to #alignment'() {
+        when:
+        character.alignment = alignment
+
+        then:
+        alignment == character.alignment
+
+        where:
+        alignment << [Good, Neutral, Evil]
+    }
+
+    @Unroll
+    def 'of level #level should deal #damage damage to defender with a strength of #str'() {
+        given:
+        character.experience = (level - 1) * 1000
+        character.strength = str
+
+        def defender = Mock Character
+        Random.nextInt(d20.value) >> roll - 1
+
+        when:
+        character.attack defender
+
+        then:
+        1 * defender.damage(roll, damage)
+
+        where:
+        level | roll | str     | damage
+        1     | 10   | ONE     | 1
+        1     | 15   | SEVEN   | 1
+        1     | 10   | TEN     | 1 + TEN.modifier
+        1     | 19   | TEN     | 1 + TEN.modifier
+        1     | 20   | TEN     | 2 * (1 + TEN.modifier)
+        1     | 20   | SIXTEEN | 2 * (1 + SIXTEEN.modifier)
+        2     | 15   | SIXTEEN | 2 + SIXTEEN.modifier
+        3     | 15   | SIXTEEN | 2 + SIXTEEN.modifier
+        4     | 15   | SIXTEEN | 3 + SIXTEEN.modifier
+        4     | 20   | TWENTY  | 2 * (3 + TWENTY.modifier)
+        6     | 15   | NINTEEN | 4 + NINTEEN.modifier
+    }
+
+    def 'should increase HP when leveling up from combat'() {
+        given:
+        def defender = Mock Character
+        Random.nextInt(d20.value) >> 17
+        defender.damage(18, 1) >> true
+        character.experience = 990
+
+
+        when:
+        character.attack defender
+
+        then:
+        10 == character.remainingHitPoints
+        10 == character.maxHitPoints
+    }
+
+    @Unroll
     def 'should be level #level when starting with #xp experience points and have hp of #hp with a constitution of #con'() {
         given:
         character.experience = xp
@@ -103,7 +180,7 @@ class PlayerCharacterTests extends Specification {
 
         expect:
         level == character.level
-        hp == character.hitPoints
+        hp == character.remainingHitPoints
 
         where:
         level | xp   | con     | hp
@@ -132,50 +209,5 @@ class PlayerCharacterTests extends Specification {
         THIRTEEN | 10 + THIRTEEN.modifier
     }
 
-    @Unroll
-    def 'should be able to set character alignment to #alignment'() {
-        when:
-        character.alignment = alignment
 
-        then:
-        alignment == character.alignment
-
-        where:
-        alignment << [Good, Neutral, Evil]
-    }
-
-    @Unroll
-    def 'of level #level should deal #damage damage to defender with AC of #ac when dice roll is #roll with a strength of #str'() {
-        given:
-        character.experience = (level - 1) * 1000
-        character.strength = str
-
-        def defender = Mock Character
-        defender.armorClass >> ac
-        Random.nextInt(d20.value) >> roll - 1
-
-        when:
-        character.attack defender
-
-        then:
-        1 * defender.takeDamage(damage)
-        sleep(100)
-
-        where:
-        ac | level | roll | str     | damage
-        10 | 1     | 2    | TEN     | 0
-        12 | 1     | 11   | TEN     | 0
-        24 | 1     | 20   | TEN     | 0
-        10 | 1     | 10   | ONE     | 1
-        10 | 1     | 15   | SEVEN   | 1
-        10 | 1     | 10   | TEN     | 1 + TEN.modifier
-        10 | 1     | 19   | TEN     | 1 + TEN.modifier
-        14 | 1     | 20   | TEN     | 2 * (1 + TEN.modifier)
-        10 | 1     | 20   | SIXTEEN | 2 * (1 + SIXTEEN.modifier)
-        10 | 2     | 15   | SIXTEEN | 2 + SIXTEEN.modifier
-        10 | 3     | 15   | SIXTEEN | 2 + SIXTEEN.modifier
-        10 | 4     | 15   | SIXTEEN | 3 + SIXTEEN.modifier
-        10 | 4     | 20   | TWENTY  | 2 * (3 + TWENTY.modifier)
-        10 | 6     | 15   | NINTEEN | 4 + NINTEEN.modifier
-    }
 }
