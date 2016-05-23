@@ -1,4 +1,6 @@
-skeleton
-========
+Evercraft
+=========
 
-Generic skeleton for Java/Groovy
+See for more information:
+https://github.com/PuttingTheDnDInTDD/EverCraft-Kata
+
