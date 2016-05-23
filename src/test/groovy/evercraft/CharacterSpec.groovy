@@ -26,40 +26,41 @@ class CharacterSpec extends Specification {
 
     def 'should not take damage if the roll is less than armor class'() {
         given:
-        def character = new Character(maxHitPoints: 10, armorClass: 10)
+        def character = new Character()
+        def startingHp = character.maxHitPoints
 
         when:
-        def result = character.damage(5, 7)
+        def result = character.attemptToDamage(5, 7)
 
         then:
         !result
-        10 == character.currentHp
+        character.currentHp == startingHp
     }
 
     def 'should take damage if the roll is greater than armor class and not affect max HP'() {
         given:
-        def character = new Character(maxHitPoints: 10, armorClass: 10)
+        def character = new Character()
+        def startingHp = character.maxHitPoints
 
         when:
-        def result = character.damage(15, 7)
+        def result = character.attemptToDamage(15, startingHp - 2)
 
         then:
         result
-        3 == character.currentHp
-        10 == character.maxHitPoints
+        character.currentHp == 2
     }
 
     def 'should take damage if the roll is equal to armor class and not affect max HP'() {
         given:
-        def character = new Character(maxHitPoints: 10, armorClass: 10)
+        def character = new Character()
+        def startingHp = character.maxHitPoints
 
         when:
-        def result = character.damage(10, 7)
+        def result = character.attemptToDamage(10, startingHp - 3)
 
         then:
         result
-        3 == character.currentHp
-        10 == character.maxHitPoints
+        character.currentHp == 3
     }
 
     @Unroll
@@ -86,7 +87,7 @@ class CharacterSpec extends Specification {
         def character = new Character()
         def defender = Mock Character
         Random.nextInt(d20.value) >> 17
-        defender.damage(18, 1) >> true
+        defender.attemptToDamage(18, 1) >> true
 
         when:
         character.attack defender
@@ -98,15 +99,15 @@ class CharacterSpec extends Specification {
     @Unroll
     def 'should be considered #status when taking #damageTaken damage'() {
         given:
-        def character = new Character(maxHitPoints: 1, damageTaken: damageTaken)
+        def character = new Character(damageTaken: damageTaken)
 
         expect:
         (status == 'alive') == character.isAlive()
 
         where:
         status  | damageTaken
-        'alive' | 0
-        'dead'  | 1
+        'alive' | 1
+        'dead'  | 10
         'dead'  | 100
     }
 
@@ -133,7 +134,7 @@ class CharacterSpec extends Specification {
         character.attack defender
 
         then:
-        1 * defender.damage(roll, damage)
+        1 * defender.attemptToDamage(roll, damage)
 
         where:
         level | roll | str     | damage
@@ -155,7 +156,7 @@ class CharacterSpec extends Specification {
         def character = new Character(experience: 990)
         def defender = Mock Character
         Random.nextInt(d20.value) >> 17
-        defender.damage(18, 1) >> true
+        defender.attemptToDamage(18, 1) >> true
 
         when:
         character.attack defender
@@ -209,10 +210,23 @@ class CharacterSpec extends Specification {
         character.maxHitPoints == STARTING_HP + new TestEquippable().modifiers.hp
     }
 
+    def 'should include damage modifiers when attacking'() {
+        given:
+        def character = new Character(equippables: [new TestEquippable()])
+        def defender = Mock Character
+        Random.nextInt(d20.value) >> 15
+
+        when:
+        character.attack defender
+
+        then:
+        1 * defender.attemptToDamage(_ as Integer, 2)
+    }
+
     def class TestEquippable implements Equippable {
         @Override
         Map getModifiers() {
-            [hp: 1]
+            [hp: 1, damage: 1]
         }
     }
 }
