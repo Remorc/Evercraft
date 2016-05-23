@@ -1,5 +1,9 @@
 package evercraft
 
+import evercraft.classes.CharacterClass
+import evercraft.classes.Default
+import evercraft.classes.Fighter
+
 import static evercraft.AbilityScore.TEN
 import static evercraft.Dice.d20
 import static java.lang.Math.max
@@ -8,7 +12,7 @@ class Character {
 
     String name
     Alignment alignment
-    List<Equippable> equippables = []
+    CharacterClass characterClass = new Default()
 
     int damageTaken = 0
     int experience = 0
@@ -58,13 +62,13 @@ class Character {
     }
 
     int getMaxHitPoints() {
-        def additionalHp = ((int) equippables.modifiers.hp.sum() ?: 0)
+        def additionalHp = characterClass.modifiers.hp ?: 0
 
         level * max(5 + additionalHp + constitution.modifier, 1)
     }
 
     private int calculateDamage(int roll) {
-        def equippableDamage = ((int) equippables.modifiers.damage.sum() ?: 0)
+        def equippableDamage = characterClass.modifiers.damage ?: 0
         def levelDamage = (int) (1 + (level / 2))
 
         def damage = max(levelDamage + strength.modifier + equippableDamage, 1)
