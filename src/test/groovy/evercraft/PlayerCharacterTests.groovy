@@ -99,18 +99,19 @@ class PlayerCharacterTests extends Specification {
     }
 
     @Unroll
-    def 'should be considered #status when HP is #hp'() {
+    def 'should be considered #status when taking #damageTaken damage'() {
         given:
-        character.remainingHitPoints = hp
+        character.maxHitPoints = 1
+        character.damageTaken = damageTaken
 
         expect:
         (status == 'alive') == character.isAlive()
 
         where:
-        status  | hp
-        'alive' | 1
-        'dead'  | 0
-        'dead'  | -1
+        status  | damageTaken
+        'alive' | 0
+        'dead'  | 1
+        'dead'  | 100
     }
 
     @Unroll
@@ -162,12 +163,11 @@ class PlayerCharacterTests extends Specification {
         defender.damage(18, 1) >> true
         character.experience = 990
 
-
         when:
         character.attack defender
 
         then:
-        10 == character.remainingHitPoints
+        10 == character.currentHp
         10 == character.maxHitPoints
     }
 
@@ -177,10 +177,9 @@ class PlayerCharacterTests extends Specification {
         character.experience = xp
         character.constitution = con
 
-
         expect:
         level == character.level
-        hp == character.remainingHitPoints
+        hp == character.currentHp
 
         where:
         level | xp   | con     | hp
@@ -208,6 +207,4 @@ class PlayerCharacterTests extends Specification {
         TEN      | 10 + TEN.modifier
         THIRTEEN | 10 + THIRTEEN.modifier
     }
-
-
 }

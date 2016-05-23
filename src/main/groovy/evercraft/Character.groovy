@@ -9,6 +9,7 @@ class Character {
     String name
     Alignment alignment
 
+    int damageTaken = 0
     int remainingHitPoints = 5
     int maxHitPoints = 5
     int armorClass = 10
@@ -29,7 +30,7 @@ class Character {
     }
 
     def isAlive() {
-        remainingHitPoints > 0
+        damageTaken < maxHitPoints
     }
 
     boolean damage(int roll, int damage) {
@@ -47,6 +48,10 @@ class Character {
         }
     }
 
+    def getCurrentHp() {
+        maxHitPoints - damageTaken
+    }
+
     private int calculateDamage(int roll) {
         roll == 20 ? damage * 2 : damage
     }
@@ -61,7 +66,6 @@ class Character {
 
     private def adjustHitPoints(level) {
         maxHitPoints = level * max(5 + constitution.modifier, 1)
-        remainingHitPoints = maxHitPoints
     }
 
     private def int calculateLevel(experience) {
