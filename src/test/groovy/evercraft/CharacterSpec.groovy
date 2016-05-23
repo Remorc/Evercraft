@@ -7,86 +7,83 @@ import static evercraft.AbilityScore.*
 import static evercraft.Character.Alignment.*
 import static evercraft.Dice.d20
 
-class PlayerCharacterTests extends Specification {
+class CharacterSpec extends Specification {
 
-    def character;
+    def final STARTING_HP = 5
 
     def setup() {
-        character = new Character()
         GroovySpy(Random, global: true)
     }
 
     def 'should be able to set character name'() {
         given:
         def expectedName = 'sample name'
+        def character = new Character(name: expectedName)
 
-        when:
-        character.name = expectedName
-
-        then:
+        expect:
         expectedName == character.name
     }
 
     def 'should not take damage if the roll is less than armor class'() {
         given:
-        character.remainingHitPoints = 10
-        character.armorClass = 10
+        def character = new Character(maxHitPoints: 10, armorClass: 10)
 
         when:
         def result = character.damage(5, 7)
 
         then:
-        10 == character.remainingHitPoints
-        false == result
+        !result
+        10 == character.currentHp
     }
 
     def 'should take damage if the roll is greater than armor class and not affect max HP'() {
         given:
-        character.remainingHitPoints = 10
-        character.maxHitPoints = 10
-        character.armorClass = 10
+        def character = new Character(maxHitPoints: 10, armorClass: 10)
 
         when:
         def result = character.damage(15, 7)
 
         then:
-        3 == character.remainingHitPoints
+        result
+        3 == character.currentHp
         10 == character.maxHitPoints
-        true == result
     }
 
     def 'should take damage if the roll is equal to armor class and not affect max HP'() {
         given:
-        character.remainingHitPoints = 10
-        character.maxHitPoints = 10
-        character.armorClass = 10
+        def character = new Character(maxHitPoints: 10, armorClass: 10)
 
         when:
         def result = character.damage(10, 7)
 
         then:
-        3 == character.remainingHitPoints
+        result
+        3 == character.currentHp
         10 == character.maxHitPoints
-        true == result
     }
 
-    def 'should default all attributes to TEN'() {
-        expect:
-        TEN == character.strength
-        TEN == character.dexterity
-        TEN == character.constitution
-        TEN == character.wisdom
-        TEN == character.intelligence
-        TEN == character.charisma
-    }
+    @Unroll
+    def 'should default #attribute to #expected'() {
+        given:
+        def character = new Character()
 
-    def 'should start with no experience'() {
         expect:
-        0 == character.experience
+        character[attribute] == expected
+
+        where:
+        attribute      | expected
+        'strength'     | TEN
+        'dexterity'    | TEN
+        'constitution' | TEN
+        'wisdom'       | TEN
+        'intelligence' | TEN
+        'charisma'     | TEN
+        'experience'   | 0
     }
 
     def 'should increase experience on a successful hit'() {
         given:
+        def character = new Character()
         def defender = Mock Character
         Random.nextInt(d20.value) >> 17
         defender.damage(18, 1) >> true
@@ -101,8 +98,7 @@ class PlayerCharacterTests extends Specification {
     @Unroll
     def 'should be considered #status when taking #damageTaken damage'() {
         given:
-        character.maxHitPoints = 1
-        character.damageTaken = damageTaken
+        def character = new Character(maxHitPoints: 1, damageTaken: damageTaken)
 
         expect:
         (status == 'alive') == character.isAlive()
@@ -116,10 +112,10 @@ class PlayerCharacterTests extends Specification {
 
     @Unroll
     def 'should be able to set character alignment to #alignment'() {
-        when:
-        character.alignment = alignment
+        given:
+        def character = new Character(alignment: alignment)
 
-        then:
+        expect:
         alignment == character.alignment
 
         where:
@@ -127,11 +123,9 @@ class PlayerCharacterTests extends Specification {
     }
 
     @Unroll
-    def 'of level #level should deal #damage damage to defender with a strength of #str'() {
+    def 'level #level with a strength of #str should deal #damage damage to defender'() {
         given:
-        character.experience = (level - 1) * 1000
-        character.strength = str
-
+        def character = new Character(experience: (level - 1) * 1000, strength: str)
         def defender = Mock Character
         Random.nextInt(d20.value) >> roll - 1
 
@@ -158,10 +152,10 @@ class PlayerCharacterTests extends Specification {
 
     def 'should increase HP when leveling up from combat'() {
         given:
+        def character = new Character(experience: 990)
         def defender = Mock Character
         Random.nextInt(d20.value) >> 17
         defender.damage(18, 1) >> true
-        character.experience = 990
 
         when:
         character.attack defender
@@ -174,8 +168,7 @@ class PlayerCharacterTests extends Specification {
     @Unroll
     def 'should be level #level when starting with #xp experience points and have hp of #hp with a constitution of #con'() {
         given:
-        character.experience = xp
-        character.constitution = con
+        def character = new Character(experience: xp, constitution: con)
 
         expect:
         level == character.level
@@ -196,7 +189,7 @@ class PlayerCharacterTests extends Specification {
     @Unroll
     def 'should set AC to #ac with a dexterity of #dex'() {
         given:
-        character.dexterity = dex
+        def character = new Character(dexterity: dex)
 
         expect:
         ac == character.armorClass
@@ -206,5 +199,20 @@ class PlayerCharacterTests extends Specification {
         SIX      | 10 + SIX.modifier
         TEN      | 10 + TEN.modifier
         THIRTEEN | 10 + THIRTEEN.modifier
+    }
+
+    def 'should include hp modifiers'() {
+        given:
+        def character = new Character(equippables: [new TestEquippable()], constitution: TEN)
+
+        expect:
+        character.maxHitPoints == STARTING_HP + new TestEquippable().modifiers.hp
+    }
+
+    def class TestEquippable implements Equippable {
+        @Override
+        Map getModifiers() {
+            [hp: 1]
+        }
     }
 }

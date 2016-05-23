@@ -4,7 +4,7 @@ import spock.lang.Specification
 import static evercraft.Dice.*
 
 
-class DiceTests extends Specification {
+class DiceSpec extends Specification {
 
     def setup() {
         GroovySpy(Random, global: true)

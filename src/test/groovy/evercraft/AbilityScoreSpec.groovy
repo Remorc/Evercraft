@@ -5,7 +5,7 @@ import spock.lang.Unroll
 
 import static AbilityScore.*
 
-class AbilityScoreTests extends Specification {
+class AbilityScoreSpec extends Specification {
 
     @Unroll
     def '#abilityScore should have a modifier of #modifier'() {
