@@ -63,14 +63,6 @@ class Character {
         level * max(5 + additionalHp + constitution.modifier, 1)
     }
 
-    void setConstitution(AbilityScore abilityScore) {
-        constitution = abilityScore
-    }
-
-    void setDexterity(AbilityScore abilityScore) {
-        dexterity = abilityScore
-    }
-
     private int calculateDamage(int roll) {
         def equippableDamage = ((int) equippables.modifiers.damage.sum() ?: 0)
         def levelDamage = (int) (1 + (level / 2))
@@ -83,7 +75,4 @@ class Character {
     private static int calculateLevel(experience) {
         1 + (experience / 1000)
     }
-
-    private setDamage(damage) { }
-    private getDamage() { }
 }
