@@ -1,6 +1,7 @@
 package evercraft
 
 import evercraft.classes.CharacterClass
+import evercraft.items.CharacterItem
 import spock.lang.Specification
 import spock.lang.Unroll
 
@@ -203,17 +204,20 @@ class CharacterSpec extends Specification {
         THIRTEEN | 10 + THIRTEEN.modifier
     }
 
-    def 'should include hp modifiers'() {
+    def 'should include all hp modifiers'() {
         given:
-        def character = new Character(characterClass: new TestCharacterClass(), constitution: TEN)
+        def character = new Character(characterClass: new TestCharacterClass(),
+                items: [new TestCharacterItem()],
+                constitution: TEN)
 
         expect:
-        character.maxHitPoints == STARTING_HP + new TestCharacterClass().modifiers.hp
+        character.maxHitPoints == STARTING_HP + 3
     }
 
-    def 'should include damage modifiers when attacking'() {
+    def 'should take into account all modifiers for damage'() {
         given:
-        def character = new Character(characterClass: new TestCharacterClass())
+        def character = new Character(characterClass: new TestCharacterClass(),
+                items: [new TestCharacterItem()])
         def defender = Mock Character
         Random.nextInt(d20.value) >> 15
 
@@ -221,13 +225,20 @@ class CharacterSpec extends Specification {
         character.attack defender
 
         then:
-        1 * defender.attemptToDamage(_ as Integer, 2)
+        1 * defender.attemptToDamage(_ as Integer, 4)
     }
 
     def class TestCharacterClass implements CharacterClass {
         @Override
         Map getModifiers() {
             [hp: 1, damage: 1]
+        }
+    }
+
+    def class TestCharacterItem implements CharacterItem {
+        @Override
+        Map getModifiers() {
+            [hp: 2, damage: 2]
         }
     }
 }

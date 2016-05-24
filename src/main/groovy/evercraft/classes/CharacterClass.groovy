@@ -1,7 +1,7 @@
 package evercraft.classes
 
-interface CharacterClass {
+import evercraft.Equippable
 
-    Map getModifiers()
+interface CharacterClass extends Equippable {
 
 }

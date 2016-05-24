@@ -2,7 +2,7 @@ package evercraft
 
 import evercraft.classes.CharacterClass
 import evercraft.classes.Default
-import evercraft.classes.Fighter
+import evercraft.items.CharacterItem
 
 import static evercraft.AbilityScore.TEN
 import static evercraft.Dice.d20
@@ -13,6 +13,7 @@ class Character {
     String name
     Alignment alignment
     CharacterClass characterClass = new Default()
+    List<CharacterItem> items = []
 
     int damageTaken = 0
     int experience = 0
@@ -62,13 +63,13 @@ class Character {
     }
 
     int getMaxHitPoints() {
-        def additionalHp = characterClass.modifiers.hp ?: 0
+        def additionalHp = getModifiers('hp')
 
         level * max(5 + additionalHp + constitution.modifier, 1)
     }
 
     private int calculateDamage(int roll) {
-        def equippableDamage = characterClass.modifiers.damage ?: 0
+        def equippableDamage = getModifiers('damage')
         def levelDamage = (int) (1 + (level / 2))
 
         def damage = max(levelDamage + strength.modifier + equippableDamage, 1)
@@ -78,5 +79,14 @@ class Character {
 
     private static int calculateLevel(experience) {
         1 + (experience / 1000)
+    }
+
+    private int getModifiers(key) {
+        def list = []
+
+        items.each { list << it.modifiers[key] ?: 0 }
+        list << characterClass.modifiers[key] ?: 0
+
+        (list.sum() ?: 0) as Integer
     }
 }
