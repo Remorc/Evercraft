@@ -38,7 +38,7 @@ class CharacterSpec extends Specification {
         character.currentHp == startingHp
     }
 
-    def 'should take damage if the roll is greater than armor class and not affect max HP'() {
+    def 'should take damage if the roll is greater than armor class'() {
         given:
         def character = new Character()
         def startingHp = character.maxHitPoints
@@ -51,7 +51,7 @@ class CharacterSpec extends Specification {
         character.currentHp == 2
     }
 
-    def 'should take damage if the roll is equal to armor class and not affect max HP'() {
+    def 'should take damage if the roll is equal to armor class'() {
         given:
         def character = new Character()
         def startingHp = character.maxHitPoints
